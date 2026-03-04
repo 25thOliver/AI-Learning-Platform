@@ -11,3 +11,19 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5440:5432"
+
+  api:
+    build: .
+    container_name: ai_learning_api
+    restart: always
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://postgres:password@db:5432/ai_learning
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    
+volumes:
+  postgres_data:
