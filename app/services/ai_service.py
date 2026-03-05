@@ -3,7 +3,7 @@ from app.config import settings
 
 client = Groq(api_key=settings.groq_api_key)
 
-MODEL = "llama-3.1-70b-versatile"
+MODEL = "gemma-7b-it"
 
 def generate_quiz(topic: str, difficulty: str) -> str:
     prompt = f"""
