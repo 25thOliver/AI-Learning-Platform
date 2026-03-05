@@ -39,3 +39,15 @@ CREATE TABLE performance_logs (
     total_attempts INTEGER,
     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE student_topic_mastery (
+    id SERIAL PRIMARY KEY,
+    student_id INT REFERENCES students(id),
+    topic_id INT REFERENCES topics(id),
+
+    mastery_score FLOAT DEFAULT 0,
+    attempts INT DEFAULT 0,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE(student_id, topic_id)
+);
