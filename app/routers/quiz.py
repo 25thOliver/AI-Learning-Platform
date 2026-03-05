@@ -26,21 +26,18 @@ def submit_answer(request: SubmitAnswerRequest, db: Session = Depends(get_db)):
     score = 100.0 if is_correct else 0.0
 
     attempt = QuizAttempt(
-    student_id=request.student_id,
-    quiz_id=request.quiz_id,
-    topic_id=quiz.topic_id,
-    submitted_answer=request.submitted_answer,
-    is_correct=is_correct,
-    score=score,
-    time_spent=request.time_spent,
+        student_id=request.student_id,
+        quiz_id=request.quiz_id,
+        submitted_answer=request.submitted_answer,
+        is_correct=is_correct,
+        score=score,
+        time_spent=request.time_spent,
     )
 
     db.add(attempt)
+    db.flush()
 
-    update_mastery(db, request.student_id, quiz.topic_id)
-
-    db.commit()
-
+    # AI Feedback
     ai_feedback = generate_feedback(
         quiz.question,
         quiz.correct_answer,
