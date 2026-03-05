@@ -1,6 +1,15 @@
 from sqlalchemy.orm import Session
 from app.models import StudentTopicMastery, QuizAttempt
 
+def determine_difficulty(avg_score: float) -> str:
+    # Determine difficulty level based on average score
+    if avg_score >= 80:
+        return "hard"
+    elif avg_score >= 60:
+        return "medium"
+    else:
+        return "easy"
+
 def update_mastery(db: Session, student_id: int, topic_id: int):
 
     attempts = db.query(QuizAttempt).filter(
