@@ -65,3 +65,17 @@ class PerformanceLog(Base):
     last_updated = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     student = relationship("Student", back_populates="performance_logs")
+
+
+class StudentTopicMastery(Base):
+    __tablename__ = "student_topic_mastery"
+
+    id = Column(Integer, primary_key=True)
+    student_id = Column(Integer, ForeignKey("students.id"), index=True)
+    topic_id = Column(Integer, ForeignKey("topics.id"), index=True)
+    mastery_score = Column(Float, default=0.0)
+    attempts = Column(Integer, default=0)
+    last_updated = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    student = relationship("Student")
+    topic = relationship("Topic")
