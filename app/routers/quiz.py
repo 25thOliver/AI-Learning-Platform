@@ -5,6 +5,7 @@ from app.database import get_db
 from app.models import QuizAttempt, Quiz, Student, PerformanceLog
 from app.schemas import SubmitAnswerRequest
 from app.services.ai_service import generate_feedback
+from app.services.personalization import update_mastery
 
 router = APIRouter()
 
@@ -25,24 +26,27 @@ def submit_answer(request: SubmitAnswerRequest, db: Session = Depends(get_db)):
     score = 100.0 if is_correct else 0.0
 
     attempt = QuizAttempt(
-        student_id=request.student_id,
-        quiz_id=request.quiz_id,
-        submitted_answer=request.submitted_answer,
-        is_correct=is_correct,
-        score=score,
-        time_spent=request.time_spent,
+    student_id=request.student_id,
+    quiz_id=request.quiz_id,
+    topic_id=quiz.topic_id,
+    submitted_answer=request.submitted_answer,
+    is_correct=is_correct,
+    score=score,
+    time_spent=request.time_spent,
     )
 
     db.add(attempt)
-    db.flush()
 
-    # AI Feedback
+    update_mastery(db, request.student_id, quiz.topic_id)
+
+    db.commit()
+
     ai_feedback = generate_feedback(
         quiz.question,
         quiz.correct_answer,
         request.submitted_answer,
     )
-
+    
     avg_score = db.query(func.avg(QuizAttempt.score)).filter(
         QuizAttempt.student_id == request.student_id
     ).scalar()
@@ -67,6 +71,7 @@ def submit_answer(request: SubmitAnswerRequest, db: Session = Depends(get_db)):
         db.add(performance)
 
     db.commit()
+
 
     return {"correct": is_correct,
             "score": score,
