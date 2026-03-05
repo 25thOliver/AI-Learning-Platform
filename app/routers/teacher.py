@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
-from app.models import QuizAttempt, Quiz, Topic
+from app.models import QuizAttempt, Quiz, Topic, Student
 
 
 router = APIRouter()
@@ -31,3 +31,22 @@ def get_teacher_report(db: Session = Depends(get_db)):
         "average_score_per_topic": avg_per_topic,
         "struggling_students": struggling,
     }
+
+@router.get("/student-trend/{student_id}")
+def get_student_trend(student_id: int, db: Session = Depends(get_db)):
+    trend = db.query(
+        QuizAttempt.created_at,
+        QuizAttempt.score,
+        Topic.name.label("topic")
+    ).join|(Quiz).join(Topic).filter(
+        QuizAttempt.student_id == student_id
+    ).order_by(QuizAttempt.created_at).all()
+
+    return [
+        {
+            "date": str(row.created_at),
+            "score": row.score,
+            "topic": row.topic
+        }
+        for row in trend
+    ]
