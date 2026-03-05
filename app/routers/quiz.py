@@ -4,6 +4,7 @@ from sqlalchemy import func
 from app.database import get_db
 from app.models import QuizAttempt, Quiz, Student, PerformanceLog
 from app.schemas import SubmitAnswerRequest
+from app.services.ai_service import generate_feedback
 
 router = APIRouter()
 
@@ -17,7 +18,10 @@ def submit_answer(request: SubmitAnswerRequest, db: Session = Depends(get_db)):
     if not quiz:
         raise HTTPException(status_code=404, detail="Quiz not found")
     
-    is_correct = request.submitted_answer.strip().lower() == quiz.correct_answer.strip().lower()
+    is_correct = (
+        request.submitted_answer.strip().lower()
+        == quiz.correct_answer.strip().lower()
+    )
     score = 100.0 if is_correct else 0.0
 
     attempt = QuizAttempt(
@@ -31,6 +35,13 @@ def submit_answer(request: SubmitAnswerRequest, db: Session = Depends(get_db)):
 
     db.add(attempt)
     db.flush()
+
+    # AI Feedback
+    ai_feedback = generate_feedback(
+        quiz.question,
+        quiz.correct_answer,
+        request.submitted_answer,
+    )
 
     avg_score = db.query(func.avg(QuizAttempt.score)).filter(
         QuizAttempt.student_id == request.student_id
@@ -59,6 +70,7 @@ def submit_answer(request: SubmitAnswerRequest, db: Session = Depends(get_db)):
 
     return {"correct": is_correct,
             "score": score,
+            "feedback": ai_feedback,
             "average_score": round(avg_score, 2),
             "total_attempts": total_attempts,
             }
