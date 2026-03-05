@@ -11,12 +11,12 @@ router = APIRouter()
 def get_teacher_report(db: Session = Depends(get_db)):
     avg_per_student = db.query(
         QuizAttempt.student_id,
-        func.avg(QuizAttempt.score)
+        func.avg(QuizAttempt.score).label("avg_score")
     ).group_by(QuizAttempt.student_id).all()
 
     avg_per_topic = db.query(
         Topic.name,
-        func.avg(QuizAttempt.score)
+        func.avg(QuizAttempt.score).label("avg_score")
     ).join(Quiz).join(QuizAttempt).group_by(Topic.name).all()
 
     struggling = db.query(
@@ -27,10 +27,20 @@ def get_teacher_report(db: Session = Depends(get_db)):
     ).all()
 
     return {
-        "average_score_per_student": avg_per_student,
-        "average_score_per_topic": avg_per_topic,
-        "struggling_students": struggling,
+        "average_score_per_student": [
+            {"student_id": r.student_id, "avg_score": round(r.avg_score, 2)}
+            for r in avg_per_student
+        ],
+        "average_score_per_topic": [
+            {"topic": r.name, "avg_score": round(r.avg_score, 2)}
+            for r in avg_per_topic
+        ],
+        "struggling_students": [
+            {"student_id": r.student_id, "avg_score": round(r.avg_score, 2)}
+            for r in struggling
+        ],
     }
+
 
 @router.get("/student-trend/{student_id}")
 def get_student_trend(student_id: int, db: Session = Depends(get_db)):
