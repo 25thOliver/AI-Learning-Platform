@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.models import StudentTopicMastery, QuizAttempt
+from app.models import StudentTopicMastery, QuizAttempt, Quiz
 
 def determine_difficulty(avg_score: float) -> str:
     # Determine difficulty level based on average score
@@ -12,9 +12,9 @@ def determine_difficulty(avg_score: float) -> str:
 
 def update_mastery(db: Session, student_id: int, topic_id: int):
 
-    attempts = db.query(QuizAttempt).filter(
+    attempts = db.query(QuizAttempt).join(Quiz).filter(
         QuizAttempt.student_id == student_id,
-        QuizAttempt.topic_id == topic_id
+        Quiz.topic_id == topic_id
     ).all()
 
     if not attempts:
