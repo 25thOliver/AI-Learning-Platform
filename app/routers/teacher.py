@@ -38,7 +38,7 @@ def get_student_trend(student_id: int, db: Session = Depends(get_db)):
         QuizAttempt.created_at,
         QuizAttempt.score,
         Topic.name.label("topic")
-    ).join|(Quiz).join(Topic).filter(
+    ).join(Quiz).join(Topic).filter(
         QuizAttempt.student_id == student_id
     ).order_by(QuizAttempt.created_at).all()
 
