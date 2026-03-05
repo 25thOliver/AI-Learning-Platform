@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
-from app.models import QuizAttempt, Quiz, Student, PerformanceLog
+from app.models import QuizAttempt, Quiz, Student, PerformanceLog, StudentTopicMastery
 from app.schemas import SubmitAnswerRequest
 from app.services.ai_service import generate_feedback
 from app.services.personalization import update_mastery
@@ -46,7 +46,7 @@ def submit_answer(request: SubmitAnswerRequest, db: Session = Depends(get_db)):
         quiz.correct_answer,
         request.submitted_answer,
     )
-    
+
     avg_score = db.query(func.avg(QuizAttempt.score)).filter(
         QuizAttempt.student_id == request.student_id
     ).scalar()
@@ -69,6 +69,25 @@ def submit_answer(request: SubmitAnswerRequest, db: Session = Depends(get_db)):
             total_attempts=total_attempts,
         )
         db.add(performance)
+
+    # Update student topic mastery
+    topic_id = quiz.topic_id
+    topic_mastery = db.query(StudentTopicMastery).filter(
+        StudentTopicMastery.student_id == request.student_id,
+        StudentTopicMastery.topic_id == topic_id
+    ).first()
+
+    if topic_mastery:
+        topic_mastery.attempts += 1
+        topic_mastery.mastery_score = (topic_mastery.mastery_score * (topic_mastery.attempts - 1) + score) / topic_mastery.attempts
+    else:
+        topic_mastery = StudentTopicMastery(
+            student_id=request.student_id,
+            topic_id=topic_id,
+            mastery_score=score,
+            attempts=1
+        )
+        db.add(topic_mastery)
 
     db.commit()
 
