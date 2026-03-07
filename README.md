@@ -1,4 +1,4 @@
-# AI Learning Platform 🧠
+# AI Learning Platform 
 
 An adaptive, AI-powered learning platform that personalises quiz difficulty in real time using a weighted mastery scoring system and generates contextual feedback via the Groq LLM API.
 
