@@ -1,0 +1,29 @@
+# Simple .gitignore for ai-learning-platform
+
+# Node (frontend)
+node_modules/
+bun.lock
+package-lock.json
+yarn.lock
+
+# Python (backend)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Environment
+.env
+.env.*
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Build / logs
+dist/
+build/
+*.log
+coverage/
