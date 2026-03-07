@@ -1,152 +1,139 @@
-# AI-Powered Personalized Learning Platform
+# AI Learning Platform 🧠
 
-An adaptive learning backend built with **FastAPI**, **PostgreSQL**, and **Groq AI** (LLaMA 3.1).
-The system personalizes quiz difficulty based on student performance, provides AI-generated
-feedback, and gives teachers analytics dashboards.
-
----
-
-## Tech Stack
-
-| Layer       | Technology              |
-|-------------|-------------------------|
-| Backend     | FastAPI (Python)        |
-| Database    | PostgreSQL 15           |
-| AI          | Groq API (LLaMA 3.1)   |
-| ORM         | SQLAlchemy              |
-| Container   | Docker + Docker Compose |
+An adaptive, AI-powered learning platform that personalises quiz difficulty in real time using a weighted mastery scoring system and generates contextual feedback via the Groq LLM API.
 
 ---
 
 ## Project Structure
 
 ```text
-ai-learning-platform/
-├── app/
-│   ├── main.py              # FastAPI app entry point
-│   ├── config.py            # Environment variable settings
-│   ├── database.py          # Database connection
-│   ├── models.py            # SQLAlchemy ORM models
-│   ├── schemas.py           # Pydantic request/response schemas
-│   ├── routers/
-│   │   ├── ai.py            # AI quiz generation
-│   │   ├── quiz.py          # Answer submission + grading
-│   │   ├── student.py       # Student progress
-│   │   └── teacher.py       # Teacher analytics
-│   └── services/
-│       ├── ai_service.py    # Groq API integration
-│       └── personalization.py  # Adaptive difficulty logic
-├── schema.sql               # Database schema
-├── seed_data.sql            # Sample test data
-├── employees.sql            # SQL practice component
-├── docker-compose.yml
-├── Dockerfile
-├── requirements.txt
+ai-learning-platform/          ← git repo root
+├── backend/
+│   ├── app/                   ← FastAPI application
+│   │   ├── routers/           ← API route handlers (quiz, student, teacher, ai)
+│   │   ├── services/          ← Business logic (ai_service, personalization)
+│   │   ├── config.py          ← Settings (reads .env)
+│   │   ├── database.py        ← SQLAlchemy engine & session
+│   │   ├── main.py            ← FastAPI app factory
+│   │   ├── models.py          ← ORM models
+│   │   └── schemas.py         ← Pydantic schemas
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   ├── schema.sql             ← DB schema (auto-loaded on first run)
+│   ├── seed_data.sql          ← Seed data (auto-loaded on first run)
+│   └── employees.sql          ← SQL practice file (FULL_NAME column demo)
+├── frontend/                  ← (clone separately — see below)
+├── docker-compose.yml         ← Orchestrates db + api (+ frontend placeholder)
+├── .env                       ← Environment variables (never commit)
 └── README.md
 ```
 
+---
 
-## Setup & Running
+## Prerequisites
 
-### Prerequisites
-- Docker and Docker Compose installed
-- A [Groq API key](https://console.groq.com/)
+| Tool | Version |
+|------|---------|
+| Docker | 24+ |
+| Docker Compose | v2 |
 
-### 1. Clone the repository
+---
+
+## Quick Start
+
 ```bash
-git clone https://github.com/25thOliver/AI-Learning-Platform.git
-cd AI-Learning-Platform
-```
+# 1. Clone the repository
+git clone <repo-url> ai-learning-platform
+cd ai-learning-platform
 
-### 2. Create a [.env](cci:7://file:///home/oliver/Documents/ai-learning-platform/.env:0:0-0:0) file
-```env
-DATABASE_URL=postgresql://postgres:password@db:5432/ai_learning
-GROQ_API_KEY=your_groq_api_key_here
-```
+# 2. Create the environment file
+cp .env.example .env          # then fill in GROQ_API_KEY
 
-### 3. Start the containers
-```bash
+# 3. Start all services
 docker compose up --build -d
+
+# 4. Confirm the API is live
+curl http://localhost:8000/docs
 ```
 
-The API will be available at: `http://localhost:8000`
+The Postgres database is initialised automatically on first run from `schema.sql` and `seed_data.sql`.
+
+---
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `GROQ_API_KEY` | API key from [console.groq.com](https://console.groq.com) |
+| `DATABASE_URL` | Set automatically by docker-compose |
 
 ---
 
 ## API Endpoints
 
-### Student Endpoints
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/student-progress/{id}` | Student mastery scores by topic |
+| `POST` | `/quiz/attempt` | Submit a quiz attempt and get AI feedback |
+| `GET` | `/teacher-report` | Aggregated report: all students & topic mastery |
+| `POST` | `/ai/generate-quiz` | Generate an adaptive quiz question |
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/student-progress/{student_id}` | Returns avg score and total attempts |
+Full interactive docs: `http://localhost:8000/docs`
 
-### Teacher Endpoints
+---
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/teacher-report` | Avg scores per student and topic; struggling students |
-| GET | `/student-trend/{student_id}` | Score progression over time |
+## Adaptive Learning System
 
-### AI Endpoints
+Quiz difficulty adapts per topic based on a **weighted rolling average**:
+- The last 5 attempts count **twice** as heavily as older ones
+- This ensures recent performance drives difficulty faster than historical scores
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/generate-quiz/{student_id}/{topic_id}` | AI generates adaptive quiz question |
-| POST | `/submit-answer` | Submit answer, receive grade + AI feedback |
+| Mastery Score | Difficulty Assigned |
+|--------------|-------------------|
+| < 40% | Easy |
+| 40 – 69% | Medium |
+| ≥ 70% | Hard |
+| ≥ 80% | Topic considered mastered |
 
-**Submit Answer Request Body:**
-```json
-{
-  "student_id": 1,
-  "quiz_id": 3,
-  "submitted_answer": "mitochondria",
-  "time_spent": 25.0
-}
+---
+
+## SQL Practice — `employees.sql`
+
+`backend/employees.sql` demonstrates:
+1. Creating an `employees` table with `first_name` / `second_name` fields
+2. Using `CONCAT` to build a computed `full_name` in a `SELECT`
+3. Adding a permanent `FULL_NAME` column via `ALTER TABLE`
+4. Populating it with `UPDATE`
+5. Bonus analytics: average salary by country, employees above average salary
+
+Run it inside the DB container:
+```bash
+docker exec -i ai_learning_db psql -U postgres -d ai_learning < backend/employees.sql
 ```
 
 ---
 
-## Personalization Logic
+## Development
 
-Difficulty is adapted based on a student's average score:
+```bash
+# View logs
+docker compose logs -f api
 
-| Score Range   | Difficulty |
-|---------------|------------|
-| Below 40%     | Easy       |
-| 40% – 69%     | Medium     |
-| 70% and above | Hard       |
+# Rebuild after code changes
+docker compose up --build -d
 
-After every submission, the student's per-topic mastery score is recalculated
-and stored, enabling topic-specific difficulty targeting.
+# Stop everything (keep data)
+docker compose down
 
----
-
-## Inclusivity Features
-
-- **Simplified explanations** — every AI feedback response includes a plain-language
-  summary designed for students who need cognitive support
-- **Structured feedback** — responses are split into: Explanation, Hint, and Simple Version
-- **Adaptive difficulty** — students are never pushed beyond their current capability
+# Stop + wipe DB volume
+docker compose down -v
+```
 
 ---
 
-## Database Schema
+## Tech Stack
 
-- `students` — student profiles
-- `topics` — subject areas
-- `quizzes` — questions with difficulty and correct answer
-- `quiz_attempts` — every student submission with score and timestamp
-- `performance_logs` — running average per student
-- `student_topic_mastery` — per-topic mastery score per student
-
-See [schema.sql](./schema.sql) for the full schema.
-
----
-
-## SQL Practice Component
-
-See [employees.sql](./employees.sql) for the standalone SQL exercise demonstrating
-the `CONCAT` function and `ALTER TABLE` to create a `FULL_NAME` column.
-
----
+- **Backend**: Python 3.11, FastAPI, SQLAlchemy
+- **Database**: PostgreSQL 15
+- **AI**: Groq API (`llama-3.1-8b-instant`)
+- **Containerisation**: Docker, Docker Compose
