@@ -9,13 +9,13 @@ services:
       POSTGRES_DB: ai_learning
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
-      - ./seed_data.sql:/docker-entrypoint-initdb.d/2-seed.sql
+      - ./backend/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
+      - ./backend/seed_data.sql:/docker-entrypoint-initdb.d/2-seed.sql
     ports:
       - "5440:5432"
 
   api:
-    build: .
+    build: ./backend
     container_name: ai_learning_api
     restart: always
     depends_on:
@@ -25,7 +25,15 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
-    
+      - ./backend:/app
+
+  # frontend:
+  #   build: ./frontend
+  #   container_name: ai_learning_frontend
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - api
+
 volumes:
   postgres_data:
