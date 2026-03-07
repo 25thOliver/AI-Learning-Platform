@@ -29,13 +29,16 @@ services:
     volumes:
       - ./backend:/app
 
-  # frontend:
-  #   build: ./frontend
-  #   container_name: ai_learning_frontend
-  #   ports:
-  #     - "3000:3000"
-  #   depends_on:
-  #     - api
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8000
+    container_name: ai_learning_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
 
 volumes:
   postgres_data:
