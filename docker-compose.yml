@@ -20,6 +20,8 @@ services:
     restart: always
     depends_on:
       - db
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgresql://postgres:password@db:5432/ai_learning
     ports:
