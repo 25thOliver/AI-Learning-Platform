@@ -40,6 +40,13 @@ export interface SubmitAnswerResponse {
   total_attempts: number;
 }
 
+export interface Student {
+  id: number;
+  first_name: string;
+  second_name: string;
+  email: string;
+}
+
 export const api = {
   getStudentProgress: (id: number) =>
     fetchApi<StudentProgress>(`/student-progress/${id}`),
@@ -60,6 +67,22 @@ export const api = {
     time_spent: number;
   }) =>
     fetchApi<SubmitAnswerResponse>("/submit-answer", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  signupStudent: (body: {
+    first_name: string;
+    second_name: string;
+    email: string;
+  }) =>
+    fetchApi<Student>("/students", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  loginStudent: (body: { email: string }) =>
+    fetchApi<Student>("/students/login", {
       method: "POST",
       body: JSON.stringify(body),
     }),
