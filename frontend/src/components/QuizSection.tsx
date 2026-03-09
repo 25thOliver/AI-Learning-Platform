@@ -12,6 +12,10 @@ const TOPICS = [
   { id: 1, name: "Algebra" },
   { id: 2, name: "Biology" },
   { id: 3, name: "Python Basics" },
+  { id: 4, name: "Physics Fundamentals" },
+  { id: 5, name: "World History" },
+  { id: 6, name: "English Writing" },
+  { id: 7, name: "Economics Basics" },
 ];
 
 interface QuizState {
@@ -51,9 +55,7 @@ const QuizSection = ({ studentId }: { studentId: number }) => {
     setError(null); setResult(null); setQuiz(null); setAnswer(""); setLoading(true);
     try {
       const data = await api.generateQuiz(studentId, topicId);
-      const questionMatch = data.quiz.match(/Question:\s*([\s\S]*?)(?:\nAnswer:|$)/i);
-      const question = questionMatch ? questionMatch[1].trim() : data.quiz;
-      setQuiz({ question, quizId: 1, difficulty: data.difficulty });
+      setQuiz({ question: data.question, quizId: data.quiz_id, difficulty: data.difficulty });
       setElapsed(0);
       startTimer();
     } catch {
