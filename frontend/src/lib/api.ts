@@ -29,7 +29,8 @@ export interface TeacherReport {
 
 export interface GeneratedQuiz {
   difficulty: string;
-  quiz: string;
+  question: string;
+  quiz_id: number;
 }
 
 export interface SubmitAnswerResponse {
@@ -58,7 +59,9 @@ export const api = {
     fetchApi<TeacherReport>("/teacher-report"),
 
   generateQuiz: (studentId: number, topicId: number) =>
-    fetchApi<GeneratedQuiz>(`/generate-quiz/${studentId}/${topicId}`, { method: "POST" }),
+    fetchApi<GeneratedQuiz>(`/generate-quiz/${studentId}/${topicId}`, {
+      method: "POST",
+    }),
 
   submitAnswer: (body: {
     student_id: number;
