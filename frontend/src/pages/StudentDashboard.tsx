@@ -32,8 +32,10 @@ const StudentDashboard = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Student {studentId}</h1>
-            <p className="text-sm text-muted-foreground">My Learning Dashboard</p>
+            <h1 className="text-2xl font-bold text-foreground">My Learning Dashboard</h1>
+            <p className="text-sm text-muted-foreground">
+              Signed in as student code {studentId}
+            </p>
           </div>
         </div>
 
