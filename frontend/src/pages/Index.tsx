@@ -1,13 +1,32 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { GraduationCap, BookOpen } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
-  const [studentId, setStudentId] = useState<string>("");
-  const [showStudentPicker, setShowStudentPicker] = useState(false);
+  const [studentCode, setStudentCode] = useState("");
+  const [showStudentForm, setShowStudentForm] = useState(false);
+  const [error, setError] = useState("");
+
+  const goToStudent = () => {
+    const trimmed = studentCode.trim();
+    if (!trimmed) {
+      setError("Please enter your student code.");
+      return;
+    }
+
+    // You can later change this validation to match
+    // whatever scheme you use for student identifiers.
+    if (!/^\d+$/.test(trimmed)) {
+      setError("Student code should be a number.");
+      return;
+    }
+
+    setError("");
+    navigate(`/student?id=${trimmed}`);
+  };
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4">
@@ -23,33 +42,50 @@ const Index = () => {
         </p>
 
         <div className="mx-auto flex max-w-sm flex-col gap-4">
-          {!showStudentPicker ? (
+          {!showStudentForm ? (
             <Button
               size="lg"
               className="gap-3 text-base"
-              onClick={() => setShowStudentPicker(true)}
+              onClick={() => setShowStudentForm(true)}
             >
               <GraduationCap className="h-5 w-5" />
-              I'm a Student
+              I&apos;m a Student
             </Button>
           ) : (
-            <div className="animate-slide-up flex gap-3">
-              <Select onValueChange={(v) => setStudentId(v)}>
-                <SelectTrigger className="flex-1 bg-card">
-                  <SelectValue placeholder="Select Student ID" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">Student 1</SelectItem>
-                  <SelectItem value="2">Student 2</SelectItem>
-                  <SelectItem value="3">Student 3</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                disabled={!studentId}
-                onClick={() => navigate(`/student?id=${studentId}`)}
-              >
-                Go
-              </Button>
+            <div className="animate-slide-up flex flex-col gap-2">
+              <Input
+                type="text"
+                inputMode="numeric"
+                placeholder="Enter your student code"
+                value={studentCode}
+                onChange={(e) => {
+                  setStudentCode(e.target.value);
+                  if (error) setError("");
+                }}
+                onKeyDown={(e) => e.key === "Enter" && goToStudent()}
+              />
+              {error && (
+                <p className="text-left text-sm text-destructive">{error}</p>
+              )}
+              <div className="flex gap-3">
+                <Button className="flex-1" onClick={goToStudent}>
+                  Continue
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setShowStudentForm(false);
+                    setStudentCode("");
+                    setError("");
+                  }}
+                >
+                  Back
+                </Button>
+              </div>
+              <p className="text-left text-xs text-muted-foreground">
+                Your code is unique to you. Other students never see your
+                activity.
+              </p>
             </div>
           )}
 
@@ -60,7 +96,7 @@ const Index = () => {
             onClick={() => navigate("/teacher")}
           >
             <BookOpen className="h-5 w-5" />
-            I'm a Teacher
+            I&apos;m a Teacher
           </Button>
         </div>
       </div>
