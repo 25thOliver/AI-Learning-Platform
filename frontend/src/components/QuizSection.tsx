@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { api, type SubmitAnswerResponse } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ interface QuizState {
 }
 
 const QuizSection = ({ studentId }: { studentId: number }) => {
+  const queryClient = useQueryClient();
   const [topicId, setTopicId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [quiz, setQuiz] = useState<QuizState | null>(null);
@@ -77,6 +79,8 @@ const QuizSection = ({ studentId }: { studentId: number }) => {
         time_spent: parseFloat(timeSpent.toFixed(1)),
       });
       setResult(res);
+      queryClient.invalidateQueries({ queryKey: ["student-progress", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["student-trend", studentId] });
     } catch {
       setError("Could not submit answer — is the API running?");
     } finally {
