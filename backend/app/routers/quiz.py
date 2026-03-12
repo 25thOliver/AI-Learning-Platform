@@ -1,3 +1,4 @@
+import re
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -9,6 +10,37 @@ from app.services.personalization import update_mastery
 
 router = APIRouter()
 
+
+def _clean(text: str) -> str:
+    """Lowercase, strip punctuation, collapse whitespace."""
+    text = text.strip().lower()
+    text = re.sub(r"[^\w\s]", "", text)   # remove punctuation
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
+def _answers_match(student: str, correct: str) -> bool:
+    """
+    Return True when the student's answer is functionally equivalent to the
+    stored correct answer.
+
+    Handles common LLM quirks:
+      - trailing punctuation   ("Photosynthesis." vs "Photosynthesis")
+      - extra preamble phrases ("The process of photosynthesis" vs "photosynthesis")
+      - minor casing/spacing differences
+    """
+    s = _clean(student)
+    c = _clean(correct)
+    if s == c:
+        return True
+    # Bidirectional containment: covers cases where the LLM stored a phrase
+    # but the student correctly named just the key term, or vice-versa.
+    # The len >= 3 guard prevents single-letter false positives.
+    if len(s) >= 3 and len(c) >= 3:
+        if s in c or c in s:
+            return True
+    return False
+
 @router.post("/submit-answer")
 def submit_answer(request: SubmitAnswerRequest, db: Session = Depends(get_db)):
     student = db.query(Student).filter(Student.id == request.student_id).first()
@@ -19,10 +51,7 @@ def submit_answer(request: SubmitAnswerRequest, db: Session = Depends(get_db)):
     if not quiz:
         raise HTTPException(status_code=404, detail="Quiz not found")
     
-    is_correct = (
-        request.submitted_answer.strip().lower()
-        == quiz.correct_answer.strip().lower()
-    )
+    is_correct = _answers_match(request.submitted_answer, quiz.correct_answer)
     score = 100.0 if is_correct else 0.0
 
     attempt = QuizAttempt(
@@ -37,11 +66,13 @@ def submit_answer(request: SubmitAnswerRequest, db: Session = Depends(get_db)):
     db.add(attempt)
     db.flush()
 
-    # AI Feedback
+    # AI Feedback — pass the pre-computed correctness so the LLM narrative
+    # is always consistent with the badge shown to the student.
     ai_feedback = generate_feedback(
         quiz.question,
         quiz.correct_answer,
         request.submitted_answer,
+        is_correct=is_correct,
     )
 
     avg_score = db.query(func.avg(QuizAttempt.score)).filter(
