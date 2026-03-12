@@ -39,10 +39,15 @@ Answer: <your answer here>
     return response.choices[0].message.content
 
 
-def generate_feedback(question: str, correct_answer: str, student_answer: str) -> str:
+def generate_feedback(
+    question: str,
+    correct_answer: str,
+    student_answer: str,
+    is_correct: bool = False,
+) -> str:
     is_correct_hint = (
         "The student answered correctly. Celebrate briefly, then deepen understanding."
-        if student_answer.strip().lower() == correct_answer.strip().lower()
+        if is_correct
         else "The student answered incorrectly. Be kind, encouraging, and constructive."
     )
 
