@@ -95,9 +95,18 @@ const QuizSection = ({ studentId }: { studentId: number }) => {
   const parseFeedback = (fb: string) => {
     const sections: { title: string; content: string }[] = [];
     const patterns = [
-      { title: "Explanation", regex: /(?:\*\*)?Explanation(?:\*\*)?[:\s]*([\s\S]*?)(?=(?:\*\*)?Hint|(?:\*\*)?Simple|$)/i },
-      { title: "Hint for Next Time", regex: /(?:\*\*)?Hint[^:]*(?:\*\*)?[:\s]*([\s\S]*?)(?=(?:\*\*)?Simple|$)/i },
-      { title: "Simple Version", regex: /(?:\*\*)?Simple[^:]*(?:\*\*)?[:\s]*([\s\S]*)/i },
+      {
+        title: "Explanation",
+        regex: /(?:\d+\.\s*)?(?:\*\*)?Explanation(?:\*\*)?[:\s]*([\s\S]*?)(?=(?:\d+\.\s*)?(?:\*\*)?(?:Memory Tip|Hint|Simple)|$)/i,
+      },
+      {
+        title: "Memory Tip",
+        regex: /(?:\d+\.\s*)?(?:\*\*)?(?:Memory Tip|Hint[^:]*?)(?:\*\*)?[:\s]*([\s\S]*?)(?=(?:\d+\.\s*)?(?:\*\*)?Simple|$)/i,
+      },
+      {
+        title: "Simple Version",
+        regex: /(?:\d+\.\s*)?(?:\*\*)?Simple[^:]*(?:\*\*)?[:\s]*([\s\S]*)/i,
+      },
     ];
     patterns.forEach(({ title, regex }) => {
       const match = fb.match(regex);
