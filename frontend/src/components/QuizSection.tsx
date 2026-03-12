@@ -90,6 +90,11 @@ const QuizSection = ({ studentId }: { studentId: number }) => {
 
   const tryAnother = () => {
     setQuiz(null); setAnswer(""); setResult(null); setError(null); setElapsed(0);
+    // Immediately generate a new question for the same topic so the student
+    // never has to re-select — a fresh quiz fires straight away.
+    if (topicId) {
+      generateQuiz();
+    }
   };
 
   const parseFeedback = (fb: string) => {
