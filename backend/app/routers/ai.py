@@ -40,7 +40,12 @@ def generate_ai_quiz(student_id: int, topic_id: int, db: Session = Depends(get_d
             _, after_question = ai_output.split("Question:", 1)
             question_part, answer_part = after_question.split("Answer:", 1)
             question_text = question_part.strip()
-            correct_answer = answer_part.strip()
+            # Take only the first non-empty line: the LLM sometimes appends
+            # extra sentences/notes after the answer on subsequent lines.
+            first_line = next(
+                (ln.strip() for ln in answer_part.splitlines() if ln.strip()), ""
+            )
+            correct_answer = first_line if first_line else answer_part.strip()
         except ValueError:
             # Fall back to raw output if the format isn't exactly as expected
             question_text = ai_output.strip()
