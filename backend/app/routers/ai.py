@@ -25,7 +25,18 @@ def generate_ai_quiz(student_id: int, topic_id: int, db: Session = Depends(get_d
 
     difficulty = determine_difficulty(avg_score)
 
-    ai_output = generate_quiz(topic.name, difficulty)
+    # Fetch recently asked questions for this topic so we can tell the LLM
+    # to avoid repeating them.
+    recent_questions = (
+        db.query(Quiz.question)
+        .filter(Quiz.topic_id == topic_id)
+        .order_by(Quiz.id.desc())
+        .limit(8)
+        .all()
+    )
+    exclude = [row[0] for row in recent_questions]
+
+    ai_output = generate_quiz(topic.name, difficulty, exclude_questions=exclude)
 
     # Parse LLM output of the form
     # Question
