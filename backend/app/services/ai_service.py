@@ -6,7 +6,7 @@ client = Groq(api_key=settings.groq_api_key)
 MODEL = "llama-3.1-8b-instant"
 
 
-def generate_quiz(topic: str, difficulty: str) -> str:
+def generate_quiz(topic: str, difficulty: str, exclude_questions: list[str] | None = None) -> str:
     difficulty_guidance = {
         "easy": "Use simple vocabulary. Focus on basic definitions or fundamental concepts. "
                 "The question should be answerable with a single word or short phrase.",
@@ -16,11 +16,20 @@ def generate_quiz(topic: str, difficulty: str) -> str:
                 "distinctions that require deep understanding of the topic.",
     }.get(difficulty, "")
 
+    exclusion_block = ""
+    if exclude_questions:
+        bullets = "\n".join(f"- {q}" for q in exclude_questions)
+        exclusion_block = f"""
+
+IMPORTANT — Do NOT ask any of these recently used questions (create something fresh):
+{bullets}
+"""
+
     prompt = f"""You are an experienced teacher creating a quiz question.
 
 Topic: {topic}
 Difficulty: {difficulty.upper()}
-Guidance: {difficulty_guidance}
+Guidance: {difficulty_guidance}{exclusion_block}
 
 Rules:
 - Ask ONE clear, unambiguous question
@@ -34,7 +43,7 @@ Answer: <your answer here>
     response = client.chat.completions.create(
         model=MODEL,
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.7,
+        temperature=0.9,
     )
     return response.choices[0].message.content
 
