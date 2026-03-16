@@ -11,8 +11,13 @@ router = APIRouter()
 def get_teacher_report(db: Session = Depends(get_db)):
     avg_per_student = db.query(
         QuizAttempt.student_id,
+        Student.first_name,
+        Student.second_name,
+        Student.email,
         func.avg(QuizAttempt.score).label("avg_score")
-    ).group_by(QuizAttempt.student_id).all()
+    ).join(Student, Student.id == QuizAttempt.student_id).group_by(
+        QuizAttempt.student_id, Student.first_name, Student.second_name, Student.email
+    ).all()
 
     avg_per_topic = db.query(
         Topic.name,
@@ -21,14 +26,25 @@ def get_teacher_report(db: Session = Depends(get_db)):
 
     struggling = db.query(
         QuizAttempt.student_id,
+        Student.first_name,
+        Student.second_name,
+        Student.email,
         func.avg(QuizAttempt.score).label("avg_score")
-    ).group_by(QuizAttempt.student_id).having(
+    ).join(Student, Student.id == QuizAttempt.student_id).group_by(
+        QuizAttempt.student_id, Student.first_name, Student.second_name, Student.email
+    ).having(
         func.avg(QuizAttempt.score) < 50
     ).all()
 
     return {
         "average_score_per_student": [
-            {"student_id": r.student_id, "avg_score": round(r.avg_score, 2)}
+            {
+                "student_id": r.student_id,
+                "first_name": r.first_name,
+                "second_name": r.second_name,
+                "email": r.email,
+                "avg_score": round(r.avg_score, 2)
+            }
             for r in avg_per_student
         ],
         "average_score_per_topic": [
@@ -36,7 +52,13 @@ def get_teacher_report(db: Session = Depends(get_db)):
             for r in avg_per_topic
         ],
         "struggling_students": [
-            {"student_id": r.student_id, "avg_score": round(r.avg_score, 2)}
+            {
+                "student_id": r.student_id,
+                "first_name": r.first_name,
+                "second_name": r.second_name,
+                "email": r.email,
+                "avg_score": round(r.avg_score, 2)
+            }
             for r in struggling
         ],
     }
