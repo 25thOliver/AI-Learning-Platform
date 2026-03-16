@@ -21,10 +21,18 @@ export interface TrendPoint {
   topic: string;
 }
 
+export interface StudentReportEntry {
+  student_id: number;
+  first_name: string;
+  second_name: string;
+  email: string;
+  avg_score: number;
+}
+
 export interface TeacherReport {
-  average_score_per_student: { student_id: number; avg_score: number }[];
+  average_score_per_student: StudentReportEntry[];
   average_score_per_topic: { topic: string; avg_score: number }[];
-  struggling_students: { student_id: number; avg_score: number }[];
+  struggling_students: StudentReportEntry[];
 }
 
 export interface GeneratedQuiz {
