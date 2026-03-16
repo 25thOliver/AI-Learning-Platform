@@ -8,7 +8,7 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Users, Target, AlertTriangle, ArrowLeft } from "lucide-react";
+import { Users, Target, AlertTriangle, ArrowLeft, Mail } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 const scoreColor = (score: number) =>
@@ -71,7 +71,8 @@ const TeacherDashboard = () => {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border text-left text-muted-foreground">
-                      <th className="pb-3 font-medium">Student ID</th>
+                      <th className="pb-3 font-medium">Student</th>
+                      <th className="pb-3 font-medium">Email</th>
                       <th className="pb-3 font-medium">Average Score</th>
                       <th className="pb-3 font-medium">Performance</th>
                     </tr>
@@ -79,7 +80,19 @@ const TeacherDashboard = () => {
                   <tbody>
                     {data.average_score_per_student.map((s) => (
                       <tr key={s.student_id} className="border-b border-border/50">
-                        <td className="py-3 font-medium text-card-foreground">{s.student_id}</td>
+                        <td className="py-3 font-medium text-card-foreground">
+                          {s.first_name} {s.second_name}
+                        </td>
+                        <td className="py-3">
+                          <a
+                            href={`mailto:${s.email}`}
+                            className="flex items-center gap-1.5 text-primary hover:underline"
+                            title={`Email ${s.first_name}`}
+                          >
+                            <Mail className="h-3.5 w-3.5 shrink-0" />
+                            {s.email}
+                          </a>
+                        </td>
                         <td className={`py-3 font-semibold ${scoreColor(s.avg_score)}`}>{s.avg_score.toFixed(1)}%</td>
                         <td className="py-3">
                           <div className="flex items-center gap-3">
@@ -130,12 +143,20 @@ const TeacherDashboard = () => {
                 <h3 className="mb-4 text-lg font-semibold text-card-foreground">⚠️ Struggling Students</h3>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {data.struggling_students.map((s) => (
-                    <div key={s.student_id} className="flex items-center justify-between rounded-lg border border-destructive/20 bg-destructive/5 p-4">
-                      <div>
-                        <p className="font-semibold text-card-foreground">Student {s.student_id}</p>
-                        <p className="text-sm text-destructive">{s.avg_score.toFixed(1)}% average</p>
+                    <div key={s.student_id} className="flex items-start justify-between rounded-lg border border-destructive/20 bg-destructive/5 p-4 gap-3">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-card-foreground">{s.first_name} {s.second_name}</p>
+                        <p className="text-sm text-destructive mb-1">{s.avg_score.toFixed(1)}% average</p>
+                        <a
+                          href={`mailto:${s.email}`}
+                          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary hover:underline truncate"
+                          title={s.email}
+                        >
+                          <Mail className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{s.email}</span>
+                        </a>
                       </div>
-                      <span className="rounded-full bg-destructive px-3 py-1 text-xs font-bold text-destructive-foreground">Needs Support</span>
+                      <span className="shrink-0 rounded-full bg-destructive px-3 py-1 text-xs font-bold text-destructive-foreground whitespace-nowrap">Needs Support</span>
                     </div>
                   ))}
                 </div>
